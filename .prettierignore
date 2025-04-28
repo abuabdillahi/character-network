@@ -1,0 +1,24 @@
+# Directories
+node_modules/
+.next/
+build/
+dist/
+out/
+coverage/
+
+# Files
+*.min.js
+*.d.ts
+*.lock
+*.log
+
+# Next.js specific
+next-env.d.ts
+.vercel
+
+# Generated files
+public/
+
+# Environmental files
+.env*
+!.env.example 
