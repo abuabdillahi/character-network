@@ -25,7 +25,6 @@ function transformCharacterData(data: Record<string, Record<string, { interactio
     nodes.push({
       id: name,
       name,
-      // value: Math.sqrt(value) * 2, // Scale the value for better visualization
       value
     });
   });
@@ -36,7 +35,6 @@ function transformCharacterData(data: Record<string, Record<string, { interactio
       links.push({
         source,
         target,
-        // value: Math.sqrt(value), // Scale the value for better visualization
         value
       });
     });
@@ -51,6 +49,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const [characterData, setCharacterData] = useState(null);
   const [graphData, setGraphData] = useState<{ nodes: Node[], links: Link[] }>({ nodes: [], links: [] });
+  const [progress, setProgress] = useState<{ step: string; percentage: number } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,9 +62,11 @@ export default function Home() {
     setLoading(true);
     setError('');
     setCharacterData(null);
+    setProgress({ step: 'Fetching book text...', percentage: 0 });
 
     try {
       // Step 1: Fetch the book text from the books API
+      setProgress({ step: 'Fetching book text...', percentage: 20 });
       const bookResponse = await fetch(`/api/books/${bookId}`);
 
       if (!bookResponse.ok) {
@@ -73,6 +74,7 @@ export default function Home() {
       }
 
       const bookText = await bookResponse.text();
+      setProgress({ step: 'Analyzing text...', percentage: 40 });
 
       // Step 2: Send the book text to the analysis API
       const analysisResponse = await fetch('/api/text', {
@@ -84,13 +86,17 @@ export default function Home() {
         throw new Error(`Failed to analyze text: ${analysisResponse.statusText}`);
       }
 
+      setProgress({ step: 'Processing results...', percentage: 80 });
       const data = await analysisResponse.json();
       setCharacterData(data.interactions);
       setGraphData(transformCharacterData(data.interactions));
+      setProgress({ step: 'Complete!', percentage: 100 });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
       setLoading(false);
+      // Clear progress after a short delay
+      setTimeout(() => setProgress(null), 2000);
     }
   };
 
@@ -129,9 +135,18 @@ export default function Home() {
         </div>
       )}
 
-      {loading && (
+      {progress && (
         <div className="p-4 mb-6 bg-blue-100 border border-blue-400 text-blue-700 rounded">
-          Loading... This may take a minute or two depending on the book size.
+          <div className="flex justify-between mb-2">
+            <span>{progress.step}</span>
+            <span>{progress.percentage}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+              style={{ width: `${progress.percentage}%` }}
+            />
+          </div>
         </div>
       )}
 
@@ -154,8 +169,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-
 
       {characterData && (
         <div className="mt-6">

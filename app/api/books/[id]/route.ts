@@ -1,4 +1,13 @@
 import { NextResponse } from "next/server";
+import { Redis } from '@upstash/redis';
+
+const CACHE_TTL = 60 * 60 * 24; // Cache for 24 hours
+
+// Initialize Redis client
+const redis = new Redis({
+    url: process.env.KV_REST_API_URL!,
+    token: process.env.KV_REST_API_TOKEN!,
+});
 
 export async function GET(
     _req: Request,
@@ -12,6 +21,18 @@ export async function GET(
                 { error: "Book ID is required" },
                 { status: 400 }
             );
+        }
+
+        // Try to get cached result
+        const cacheKey = `book:${bookId}`;
+        const cachedText = await redis.get<string>(cacheKey);
+        if (cachedText) {
+            return new NextResponse(cachedText, {
+                headers: {
+                    "Content-Type": "text/plain",
+                    "Cache-Control": "public, max-age=86400",
+                },
+            });
         }
 
         // Format the URL according to Project Gutenberg's pattern
@@ -38,20 +59,26 @@ export async function GET(
 
             const text = await alternativeResponse.text();
 
-            // Return the text with proper content type
+            // Cache the result
+            await redis.set(cacheKey, text, { ex: CACHE_TTL });
+
             return new NextResponse(text, {
                 headers: {
                     "Content-Type": "text/plain",
+                    "Cache-Control": "public, max-age=86400",
                 },
             });
         }
 
         const text = await response.text();
 
-        // Return the text with proper content type
+        // Cache the result
+        await redis.set(cacheKey, text, { ex: CACHE_TTL });
+
         return new NextResponse(text, {
             headers: {
                 "Content-Type": "text/plain",
+                "Cache-Control": "public, max-age=86400",
             },
         });
     } catch (error) {
