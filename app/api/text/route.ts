@@ -75,7 +75,7 @@ export async function POST(req: Request) {
                     You respond in JSON format.
                     Analyze the provided book text to identify characters and their interactions.
                     An interaction is defined as a conversation between two characters.
-                    Only include individuals, and exclude groups such as companies, organizations, etc.
+                    Only include human characters, and exclude groups such as companies, organizations, etc.
                     
                     Your response must conform to this JSON Schema:
                     ${JSON.stringify(jsonSchema, null, 2)}
@@ -92,11 +92,13 @@ export async function POST(req: Request) {
         }
       ],
       model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      temperature: 1,
-      max_tokens: 1024
+      temperature: 0,
+      max_tokens: 4000
     });
 
     const interactions = completion.choices[0].message.content || "{}";
+
+    console.log(interactions);
 
     return NextResponse.json({ interactions: JSON.parse(interactions.replace(/```json/g, "").replace(/```/g, "").replace(/```/g, "")) });
   } catch (error) {
