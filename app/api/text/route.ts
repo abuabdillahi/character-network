@@ -27,6 +27,25 @@ const redis = new Redis({
   token: process.env.KV_REST_API_TOKEN!,
 });
 
+function extractTitleAndAuthor(text: string): { title: string | null, author: string | null } {
+  let title: string | null = null;
+  let author: string | null = null;
+
+  // Regular expression to find the title line
+  const titleMatch = text.match(/Title:\s*(.*?)(?:\r?\n|\r)/);
+  if (titleMatch && titleMatch[1]) {
+    title = titleMatch[1].trim();
+  }
+
+  // Regular expression to find the author line
+  const authorMatch = text.match(/Author:\s*(.*?)(?:\r?\n|\r)/);
+  if (authorMatch && authorMatch[1]) {
+    author = authorMatch[1].trim();
+  }
+
+  return { title, author };
+}
+
 export async function POST(req: Request) {
   try {
     const bookText = await req.text();
@@ -38,8 +57,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate a cache key based on the book text
-    const cacheKey = `analysis:${Buffer.from(bookText).toString('base64').slice(0, 50)}`;
+    // Generate a cache key based on the book title and author
+    const { title, author } = extractTitleAndAuthor(bookText);
+    const cacheKey = `analysis:${title}-${author}`;
 
     // Try to get cached result
     const cachedResult = await redis.get<AnalysisResult>(cacheKey);
