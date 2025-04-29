@@ -79,7 +79,7 @@ export default function Home() {
       // Step 2: Send the book text to the analysis API
       const analysisResponse = await fetch('/api/text', {
         method: 'POST',
-        body: bookText,
+        body: JSON.stringify({ bookId, bookText }),
       });
 
       if (!analysisResponse.ok) {

@@ -27,28 +27,11 @@ const redis = new Redis({
   token: process.env.KV_REST_API_TOKEN!,
 });
 
-function extractTitleAndAuthor(text: string): { title: string | null, author: string | null } {
-  let title: string | null = null;
-  let author: string | null = null;
-
-  // Regular expression to find the title line
-  const titleMatch = text.match(/Title:\s*(.*?)(?:\r?\n|\r)/);
-  if (titleMatch && titleMatch[1]) {
-    title = titleMatch[1].trim();
-  }
-
-  // Regular expression to find the author line
-  const authorMatch = text.match(/Author:\s*(.*?)(?:\r?\n|\r)/);
-  if (authorMatch && authorMatch[1]) {
-    author = authorMatch[1].trim();
-  }
-
-  return { title, author };
-}
-
 export async function POST(req: Request) {
   try {
-    const bookText = await req.text();
+    const request = await req.json();
+    const bookText = request.bookText;
+    const bookId = request.bookId;
 
     if (!bookText || typeof bookText !== 'string') {
       return NextResponse.json(
@@ -57,9 +40,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate a cache key based on the book title and author
-    const { title, author } = extractTitleAndAuthor(bookText);
-    const cacheKey = `analysis:${title}-${author}`;
+    // Generate a cache key based on the book id
+    const cacheKey = `analysis:${bookId}`;
 
     // Try to get cached result
     const cachedResult = await redis.get<AnalysisResult>(cacheKey);
@@ -161,11 +143,11 @@ export async function POST(req: Request) {
       });
     });
 
-    console.log(mergedInteractions);
+    // console.log(mergedInteractions);
 
     const result: AnalysisResult = { interactions: mergedInteractions };
 
-    console.log(result);
+    // console.log(result);
 
     // Cache the result
     await redis.set(cacheKey, result, { ex: CACHE_TTL });
