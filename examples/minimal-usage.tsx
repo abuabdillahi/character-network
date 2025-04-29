@@ -1,9 +1,9 @@
 "use client"
 
-import NetworkGraph from "../components/network-graph"
+import NetworkGraph, { type Node, type Link } from "../components/network-graph"
 
 // Minimal example data
-const nodes = [
+const nodes: Node[] = [
   { id: "1", name: "Node 1", group: 0 },
   { id: "2", name: "Node 2", group: 1 },
   { id: "3", name: "Node 3", group: 1 },
@@ -11,7 +11,7 @@ const nodes = [
   { id: "5", name: "Node 5", group: 2 },
 ]
 
-const links = [
+const links: Link[] = [
   { source: "1", target: "2" },
   { source: "1", target: "3" },
   { source: "2", target: "3" },

@@ -3,20 +3,39 @@
 import { useEffect, useRef, useState } from "react"
 import * as d3 from "d3"
 
+// Extend D3's SimulationNodeDatum to include our custom properties
+interface SimulationNode extends d3.SimulationNodeDatum {
+  id: string
+  name?: string
+  group?: number
+  value?: number
+  [key: string]: unknown // More type-safe than any
+}
+
 // Types for the component props
 export interface Node {
   id: string
   name?: string
   group?: number
   value?: number
-  [key: string]: any // Allow for additional properties
+  x?: number
+  y?: number
+  fx?: number | null
+  fy?: number | null
+  [key: string]: unknown // More type-safe than any
 }
 
 export interface Link {
-  source: string
-  target: string
+  source: string | Node
+  target: string | Node
   value?: number
-  [key: string]: any // Allow for additional properties
+  [key: string]: unknown // More type-safe than any
+}
+
+// Extend D3's SimulationLinkDatum to include our custom properties
+interface SimulationLink extends d3.SimulationLinkDatum<SimulationNode> {
+  value?: number
+  [key: string]: unknown // More type-safe than any
 }
 
 export interface NetworkGraphProps {
@@ -54,13 +73,13 @@ export default function NetworkGraph({
   // Appearance
   width = 800,
   height = 600,
-  nodeRadius = (node) => Math.sqrt(node.value || 10) + 5,
-  nodeColor = (node) => {
+  nodeRadius = (node: Node): number => Math.sqrt(node.value || 10) + 5,
+  nodeColor = (node: Node): string => {
     const colors = ["#4361ee", "#3a0ca3", "#7209b7", "#f72585", "#4cc9f0"]
     return node.group !== undefined ? colors[node.group % colors.length] : "#4361ee"
   },
   linkColor = "#999",
-  linkWidth = (link) => Math.sqrt(link.value || 1) * 1.5,
+  linkWidth = (link: Link): number => Math.sqrt(link.value || 1) * 1.5,
 
   // Physics
   linkStrength = 0.3,
@@ -80,7 +99,7 @@ export default function NetworkGraph({
   const [hoveredNode, setHoveredNode] = useState<Node | null>(null)
 
   // Handle node hover internally and propagate to parent if callback provided
-  const handleNodeHover = (node: Node | null) => {
+  const handleNodeHover = (node: Node | null): void => {
     setHoveredNode(node)
     if (onNodeHover) {
       onNodeHover(node)
@@ -99,57 +118,107 @@ export default function NetworkGraph({
     // Clear previous graph
     d3.select(svgRef.current).selectAll("*").remove()
 
-    const svg = d3.select(svgRef.current)
+    const svg = d3.select<SVGSVGElement, unknown>(svgRef.current)
+
+    // Create a deep copy of nodes to avoid mutating props
+    const simulationNodes: SimulationNode[] = nodes.map((node) => ({ ...node }))
+
+    // Create a map of node IDs to node objects
+    const nodeMap = new Map<string, SimulationNode>()
+    simulationNodes.forEach((node) => {
+      nodeMap.set(node.id, node)
+    })
+
+    // Define the type for our link mapping function's return type
+    type MappedLink = SimulationLink | null
+
+    // Filter and convert links to the format D3 expects
+    // Only include links where both source and target nodes exist
+    const simulationLinks: SimulationLink[] = links
+      .map<MappedLink>((link) => {
+        const sourceId = typeof link.source === "string" ? link.source : link.source.id
+        const targetId = typeof link.target === "string" ? link.target : link.target.id
+
+        const sourceNode = nodeMap.get(sourceId)
+        const targetNode = nodeMap.get(targetId)
+
+        if (!sourceNode || !targetNode) {
+          console.warn(`Link references non-existent node: ${sourceId} -> ${targetId}`)
+          return null
+        }
+
+        return {
+          ...link,
+          source: sourceNode,
+          target: targetNode,
+        }
+      })
+      .filter((link): link is SimulationLink => link !== null)
 
     // Create a simulation with several forces
     const simulation = d3
-      .forceSimulation(nodes)
+      .forceSimulation<SimulationNode>()
+      .nodes(simulationNodes)
       .force(
         "link",
         d3
-          .forceLink(links)
-          .id((d: any) => d.id)
+          .forceLink<SimulationNode, SimulationLink>(simulationLinks)
+          .id((d) => d.id)
           .strength(linkStrength),
       )
-      .force("charge", d3.forceManyBody().strength(nodeCharge * 10))
-      .force("center", d3.forceCenter(dimensions.width / 2, dimensions.height / 2))
-      .force("x", d3.forceX(dimensions.width / 2).strength(0.1))
-      .force("y", d3.forceY(dimensions.height / 2).strength(0.1))
+      .force("charge", d3.forceManyBody<SimulationNode>().strength(nodeCharge * 10))
+      .force("center", d3.forceCenter<SimulationNode>(dimensions.width / 2, dimensions.height / 2))
+      .force("x", d3.forceX<SimulationNode>(dimensions.width / 2).strength(0.1))
+      .force("y", d3.forceY<SimulationNode>(dimensions.height / 2).strength(0.1))
 
     // Add zoom functionality if enabled
     if (enableZoom) {
       const zoom = d3
-        .zoom()
+        .zoom<SVGSVGElement, unknown>()
         .scaleExtent([0.1, 4])
-        .on("zoom", (event) => {
-          g.attr("transform", event.transform)
+        .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
+          g.attr("transform", event.transform.toString())
         })
 
-      svg.call(zoom as any)
+      svg.call(zoom)
     }
 
     // Create a group for the graph elements
-    const g = svg.append("g")
+    const g = svg.append<SVGGElement>("g")
 
     // Add links
     const link = g
       .append("g")
       .attr("stroke", typeof linkColor === "function" ? null : linkColor)
       .attr("stroke-opacity", 0.6)
-      .selectAll("line")
-      .data(links)
+      .selectAll<SVGLineElement, SimulationLink>("line")
+      .data(simulationLinks)
       .join("line")
-      .attr("stroke-width", (d) => (typeof linkWidth === "function" ? linkWidth(d) : linkWidth))
+      .attr("stroke-width", (d) => {
+        const linkData = {
+          ...d,
+          source: typeof d.source === "object" ? d.source.id : d.source,
+          target: typeof d.target === "object" ? d.target.id : d.target,
+        } as Link
+        return typeof linkWidth === "function" ? linkWidth(linkData) : linkWidth
+      })
 
     if (typeof linkColor === "function") {
-      link.attr("stroke", linkColor)
+      link.attr("stroke", (d) => {
+        const linkData = {
+          ...d,
+          source: typeof d.source === "object" ? d.source.id : d.source,
+          target: typeof d.target === "object" ? d.target.id : d.target,
+        } as Link
+        return linkColor(linkData)
+      })
     }
 
     // Add nodes
     const node = g
       .append("g")
-      .selectAll("circle")
-      .data(nodes)
+      .selectAll<SVGCircleElement, SimulationNode>("circle")
+      .data(simulationNodes)
       .join("circle")
       .attr("r", (d) => (typeof nodeRadius === "function" ? nodeRadius(d) : nodeRadius))
       .attr("fill", (d) => (typeof nodeColor === "function" ? nodeColor(d) : nodeColor))
@@ -158,15 +227,21 @@ export default function NetworkGraph({
 
     // Add drag behavior if enabled
     if (enableDrag) {
-      node.call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended) as any)
+      const drag = d3
+        .drag<SVGCircleElement, SimulationNode>()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended)
+
+      node.call(drag)
     }
 
     // Add node labels if enabled
     if (showLabels) {
       const labels = g
         .append("g")
-        .selectAll("text")
-        .data(nodes)
+        .selectAll<SVGTextElement, SimulationNode>("text")
+        .data(simulationNodes)
         .join("text")
         .text((d) => d.name || d.id)
         .attr("font-size", 10)
@@ -178,90 +253,126 @@ export default function NetworkGraph({
       // Update label positions on simulation tick
       simulation.on("tick", () => {
         link
-          .attr("x1", (d: any) => d.source.x)
-          .attr("y1", (d: any) => d.source.y)
-          .attr("x2", (d: any) => d.target.x)
-          .attr("y2", (d: any) => d.target.y)
+          .attr("x1", (d) => (d.source as SimulationNode).x ?? 0)
+          .attr("y1", (d) => (d.source as SimulationNode).y ?? 0)
+          .attr("x2", (d) => (d.target as SimulationNode).x ?? 0)
+          .attr("y2", (d) => (d.target as SimulationNode).y ?? 0)
 
-        node.attr("cx", (d: any) => d.x).attr("cy", (d: any) => d.y)
+        node.attr("cx", (d) => d.x ?? 0).attr("cy", (d) => d.y ?? 0)
 
-        labels.attr("x", (d: any) => d.x).attr("y", (d: any) => d.y)
+        labels.attr("x", (d) => d.x ?? 0).attr("y", (d) => d.y ?? 0)
       })
     } else {
       // Update node and link positions on simulation tick (without labels)
       simulation.on("tick", () => {
         link
-          .attr("x1", (d: any) => d.source.x)
-          .attr("y1", (d: any) => d.source.y)
-          .attr("x2", (d: any) => d.target.x)
-          .attr("y2", (d: any) => d.target.y)
+          .attr("x1", (d) => (d.source as SimulationNode).x ?? 0)
+          .attr("y1", (d) => (d.source as SimulationNode).y ?? 0)
+          .attr("x2", (d) => (d.target as SimulationNode).x ?? 0)
+          .attr("y2", (d) => (d.target as SimulationNode).y ?? 0)
 
-        node.attr("cx", (d: any) => d.x).attr("cy", (d: any) => d.y)
+        node.attr("cx", (d) => d.x ?? 0).attr("cy", (d) => d.y ?? 0)
       })
     }
 
     // Add event handlers
     node
-      .on("mouseover", (event, d) => {
-        handleNodeHover(d as Node)
+      .on("mouseover", (event: MouseEvent, d: SimulationNode) => {
+        handleNodeHover(d)
 
         // Highlight the node
-        d3.select(event.currentTarget).attr("stroke", "#ff6b6b").attr("stroke-width", 2)
+        d3.select<SVGCircleElement, SimulationNode>(event.currentTarget as SVGCircleElement)
+          .attr("stroke", "#ff6b6b")
+          .attr("stroke-width", 2)
 
         // Highlight connected links
         link
-          .attr("stroke", (l: any) =>
-            l.source.id === d.id || l.target.id === d.id
-              ? "#ff6b6b"
-              : typeof linkColor === "function"
-                ? linkColor(l)
-                : linkColor,
-          )
-          .attr("stroke-width", (l: any) =>
-            l.source.id === d.id || l.target.id === d.id
-              ? 3
-              : typeof linkWidth === "function"
-                ? linkWidth(l)
-                : linkWidth,
-          )
+          .attr("stroke", (l) => {
+            const sourceId = (l.source as SimulationNode).id
+            const targetId = (l.target as SimulationNode).id
+
+            if (sourceId === d.id || targetId === d.id) {
+              return "#ff6b6b"
+            }
+
+            const linkData = { ...l, source: sourceId, target: targetId } as Link
+            return typeof linkColor === "function" ? linkColor(linkData) : linkColor
+          })
+          .attr("stroke-width", (l) => {
+            const sourceId = (l.source as SimulationNode).id
+            const targetId = (l.target as SimulationNode).id
+
+            if (sourceId === d.id || targetId === d.id) {
+              return 3
+            }
+
+            const linkData = { ...l, source: sourceId, target: targetId } as Link
+            return typeof linkWidth === "function" ? linkWidth(linkData) : linkWidth
+          })
       })
-      .on("mouseout", (event) => {
+      .on("mouseout", (event: MouseEvent) => {
         handleNodeHover(null)
 
         // Reset node style
-        d3.select(event.currentTarget).attr("stroke", "#fff").attr("stroke-width", 1.5)
+        d3.select<SVGCircleElement, SimulationNode>(event.currentTarget as SVGCircleElement)
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 1.5)
 
         // Reset link styles
         link
-          .attr("stroke", typeof linkColor === "function" ? (d: any) => linkColor(d) : linkColor)
-          .attr("stroke-width", (d: any) => (typeof linkWidth === "function" ? linkWidth(d) : linkWidth))
+          .attr("stroke", (d) => {
+            const linkData = {
+              ...d,
+              source: (d.source as SimulationNode).id,
+              target: (d.target as SimulationNode).id,
+            } as Link
+            return typeof linkColor === "function" ? linkColor(linkData) : linkColor
+          })
+          .attr("stroke-width", (d) => {
+            const linkData = {
+              ...d,
+              source: (d.source as SimulationNode).id,
+              target: (d.target as SimulationNode).id,
+            } as Link
+            return typeof linkWidth === "function" ? linkWidth(linkData) : linkWidth
+          })
       })
 
     if (onNodeClick) {
-      node.on("click", (_, d) => onNodeClick(d as Node))
+      node.on("click", (event: MouseEvent, d: SimulationNode) => onNodeClick(d))
     }
 
     // Drag functions
-    function dragstarted(event: any, d: any) {
+    function dragstarted(
+      event: d3.D3DragEvent<SVGCircleElement, SimulationNode, SimulationNode>,
+      d: SimulationNode,
+    ): void {
       if (!event.active) simulation.alphaTarget(0.3).restart()
       d.fx = d.x
       d.fy = d.y
     }
 
-    function dragged(event: any, d: any) {
+    function dragged(event: d3.D3DragEvent<SVGCircleElement, SimulationNode, SimulationNode>, d: SimulationNode): void {
       d.fx = event.x
       d.fy = event.y
     }
 
-    function dragended(event: any, d: any) {
+    function dragended(
+      event: d3.D3DragEvent<SVGCircleElement, SimulationNode, SimulationNode>,
+      d: SimulationNode,
+    ): void {
       if (!event.active) simulation.alphaTarget(0)
       d.fx = null
       d.fy = null
     }
 
     // Update simulation when parameters change
-    simulation.force("charge")?.strength(nodeCharge * 10)
-    simulation.force("link")?.strength(linkStrength)
+    const linkForce = simulation.force("link") as d3.ForceLink<SimulationNode, SimulationLink>
+    if (linkForce) linkForce.strength(linkStrength)
+
+    const chargeForce = simulation.force("charge") as d3.ForceManyBody<SimulationNode>
+    if (chargeForce) chargeForce.strength(nodeCharge * 10)
+
     simulation.alpha(1).restart()
 
     return () => {
@@ -283,6 +394,14 @@ export default function NetworkGraph({
     onNodeClick,
     onNodeHover,
   ])
+
+  // Update label visibility when showLabels changes
+  useEffect(() => {
+    if (!svgRef.current) return
+    d3.select(svgRef.current)
+      .selectAll("text")
+      .style("opacity", showLabels ? 0.7 : 0)
+  }, [showLabels])
 
   return <svg ref={svgRef} width={dimensions.width} height={dimensions.height} className="network-graph" />
 }
