@@ -23,7 +23,7 @@ const links: Link[] = [
 export default function MinimalExample() {
   return (
     <div className="w-full h-[400px]">
-      <NetworkGraph nodes={nodes} links={links} width={600} height={400} />
+      <NetworkGraph nodes={nodes} links={links} />
     </div>
   )
 }

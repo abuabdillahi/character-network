@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useEffect, useRef, useState } from "react"
 import * as d3 from "d3"
 
@@ -44,8 +46,8 @@ export interface NetworkGraphProps {
   links: Link[]
 
   // Appearance
-  width?: number
-  height?: number
+  width?: number | string // Can be a fixed number or percentage/auto
+  height?: number | string // Can be a fixed number or percentage/auto
   nodeRadius?: number | ((node: Node) => number)
   nodeColor?: string | ((node: Node) => string)
   linkColor?: string | ((link: Link) => string)
@@ -71,8 +73,8 @@ export default function NetworkGraph({
   links,
 
   // Appearance
-  width = 800,
-  height = 600,
+  width = "100%",
+  height = "100%",
   nodeRadius = (node: Node): number => Math.sqrt(node.value || 10) + 5,
   nodeColor = (node: Node): string => {
     const colors = ["#4361ee", "#3a0ca3", "#7209b7", "#f72585", "#4cc9f0"]
@@ -94,9 +96,11 @@ export default function NetworkGraph({
   onNodeClick,
   onNodeHover,
 }: NetworkGraphProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
-  const [dimensions, setDimensions] = useState({ width, height })
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
   const [hoveredNode, setHoveredNode] = useState<Node | null>(null)
+  const simulationRef = useRef<d3.Simulation<SimulationNode, SimulationLink> | null>(null)
 
   // Handle node hover internally and propagate to parent if callback provided
   const handleNodeHover = (node: Node | null): void => {
@@ -106,14 +110,43 @@ export default function NetworkGraph({
     }
   }
 
-  // Update dimensions if props change
+  // Update dimensions when container size changes
   useEffect(() => {
-    setDimensions({ width, height })
-  }, [width, height])
+    if (!containerRef.current) return
+
+    const updateDimensions = (): void => {
+      if (containerRef.current) {
+        const { width: containerWidth, height: containerHeight } = containerRef.current.getBoundingClientRect()
+
+        // Only update if dimensions have actually changed
+        if (containerWidth !== dimensions.width || containerHeight !== dimensions.height) {
+          setDimensions({
+            width: containerWidth,
+            height: containerHeight,
+          })
+        }
+      }
+    }
+
+    // Initial update
+    updateDimensions()
+
+    // Set up ResizeObserver to detect container size changes
+    const resizeObserver = new ResizeObserver(updateDimensions)
+    resizeObserver.observe(containerRef.current)
+
+    // Clean up
+    return () => {
+      if (containerRef.current) {
+        resizeObserver.unobserve(containerRef.current)
+      }
+      resizeObserver.disconnect()
+    }
+  }, [dimensions.width, dimensions.height])
 
   // D3 force simulation
   useEffect(() => {
-    if (!svgRef.current || !nodes.length) return
+    if (!svgRef.current || !nodes.length || dimensions.width === 0 || dimensions.height === 0) return
 
     // Clear previous graph
     d3.select(svgRef.current).selectAll("*").remove()
@@ -170,6 +203,9 @@ export default function NetworkGraph({
       .force("center", d3.forceCenter<SimulationNode>(dimensions.width / 2, dimensions.height / 2))
       .force("x", d3.forceX<SimulationNode>(dimensions.width / 2).strength(0.1))
       .force("y", d3.forceY<SimulationNode>(dimensions.height / 2).strength(0.1))
+
+    // Store simulation reference for cleanup and updates
+    simulationRef.current = simulation
 
     // Add zoom functionality if enabled
     if (enableZoom) {
@@ -376,12 +412,16 @@ export default function NetworkGraph({
     simulation.alpha(1).restart()
 
     return () => {
-      simulation.stop()
+      if (simulationRef.current) {
+        simulationRef.current.stop()
+        simulationRef.current = null
+      }
     }
   }, [
     nodes,
     links,
-    dimensions,
+    dimensions.width,
+    dimensions.height,
     linkStrength,
     nodeCharge,
     showLabels,
@@ -395,6 +435,19 @@ export default function NetworkGraph({
     onNodeHover,
   ])
 
+  // Update center forces when dimensions change
+  useEffect(() => {
+    if (!simulationRef.current || dimensions.width === 0 || dimensions.height === 0) return
+
+    // Update center forces
+    simulationRef.current
+      .force("center", d3.forceCenter<SimulationNode>(dimensions.width / 2, dimensions.height / 2))
+      .force("x", d3.forceX<SimulationNode>(dimensions.width / 2).strength(0.1))
+      .force("y", d3.forceY<SimulationNode>(dimensions.height / 2).strength(0.1))
+      .alpha(0.3)
+      .restart()
+  }, [dimensions.width, dimensions.height])
+
   // Update label visibility when showLabels changes
   useEffect(() => {
     if (!svgRef.current) return
@@ -403,5 +456,22 @@ export default function NetworkGraph({
       .style("opacity", showLabels ? 0.7 : 0)
   }, [showLabels])
 
-  return <svg ref={svgRef} width={dimensions.width} height={dimensions.height} className="network-graph" />
+  // Determine container style based on width and height props
+  const containerStyle: React.CSSProperties = {
+    width: typeof width === "number" ? `${width}px` : width,
+    height: typeof height === "number" ? `${height}px` : height,
+    position: "relative",
+  }
+
+  return (
+    <div ref={containerRef} style={containerStyle} className="network-graph-container">
+      <svg
+        ref={svgRef}
+        width={dimensions.width}
+        height={dimensions.height}
+        className="network-graph"
+        style={{ display: "block" }}
+      />
+    </div>
+  )
 }

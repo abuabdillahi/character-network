@@ -153,12 +153,11 @@ export default function Home() {
       {characterData && (
         <div className="mt-12">
           <h2 className="text-2xl font-bold mb-4">Character Network Graph</h2>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-lg shadow h-[50vh] md:h-[500px]">
             <NetworkGraph
               nodes={graphData.nodes}
               links={graphData.links}
-              width={832}
-              height={600}
+              height={'100%'}
               linkStrength={0.1}
               nodeCharge={-150}
               showLabels={true}
