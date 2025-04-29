@@ -1,12 +1,56 @@
 'use client';
 
 import { useState } from 'react';
+import NetworkGraph, { Link, Node } from '@/components/network-graph';
+
+// Function to transform character interaction data into network graph format
+function transformCharacterData(data: Record<string, Record<string, { interactions: number }>>) {
+  if (!data) return { nodes: [], links: [] };
+
+  const nodes: { id: string; name: string; value: number }[] = [];
+  const links: { source: string; target: string; value: number }[] = [];
+  const nodeMap = new Map<string, number>();
+
+  // First pass: collect all unique characters and their total interactions
+  Object.entries(data).forEach(([character, interactions]) => {
+    let totalInteractions = 0;
+    Object.values(interactions).forEach(({ interactions: count }) => {
+      totalInteractions += count;
+    });
+    nodeMap.set(character, totalInteractions);
+  });
+
+  // Create nodes with values based on total interactions
+  nodeMap.forEach((value, name) => {
+    nodes.push({
+      id: name,
+      name,
+      // value: Math.sqrt(value) * 2, // Scale the value for better visualization
+      value
+    });
+  });
+
+  // Create links between characters
+  Object.entries(data).forEach(([source, interactions]) => {
+    Object.entries(interactions).forEach(([target, { interactions: value }]) => {
+      links.push({
+        source,
+        target,
+        // value: Math.sqrt(value), // Scale the value for better visualization
+        value
+      });
+    });
+  });
+
+  return { nodes, links };
+}
 
 export default function Home() {
   const [bookId, setBookId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [characterData, setCharacterData] = useState(null);
+  const [graphData, setGraphData] = useState<{ nodes: Node[], links: Link[] }>({ nodes: [], links: [] });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +86,7 @@ export default function Home() {
 
       const data = await analysisResponse.json();
       setCharacterData(data.interactions);
+      setGraphData(transformCharacterData(data.interactions));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
@@ -89,6 +134,28 @@ export default function Home() {
           Loading... This may take a minute or two depending on the book size.
         </div>
       )}
+
+      {characterData && (
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold mb-4">Character Network Graph</h2>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <NetworkGraph
+              nodes={graphData.nodes}
+              links={graphData.links}
+              width={832}
+              height={600}
+              linkStrength={0.1}
+              nodeCharge={-150}
+              showLabels={true}
+              enableZoom={true}
+              enableDrag={true}
+              onNodeClick={(node) => console.log('Clicked node:', node)}
+            />
+          </div>
+        </div>
+      )}
+
+
 
       {characterData && (
         <div className="mt-6">
