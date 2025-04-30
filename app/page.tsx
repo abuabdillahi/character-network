@@ -3,24 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import NetworkGraph, { Link, Node } from '@/components/network-graph';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CharacterDialog } from '@/components/character-dialog';
+import { BookIdInput } from '@/components/book-id-input';
 import { transformCharacterData } from '@/app/utils';
-
-// Popular books data with Gutenberg IDs
-const popularBooks = [
-  { id: '1342', title: 'Pride and Prejudice' },
-  { id: '84', title: 'Frankenstein' },
-  { id: '11', title: 'Alice in Wonderland' },
-  { id: '2701', title: 'Moby Dick' },
-  { id: '1661', title: 'The Adventures of Sherlock Holmes' },
-  { id: '98', title: 'A Tale of Two Cities' },
-  { id: '1400', title: 'Great Expectations' },
-  { id: '345', title: 'Dracula' },
-  { id: '174', title: 'The Picture of Dorian Gray' },
-  { id: '16', title: 'Peter Pan' },
-];
 
 export default function Home() {
   const [bookId, setBookId] = useState('');
@@ -32,8 +18,6 @@ export default function Home() {
   const defaultGraphTitle = 'Character Network';
   const [graphTitle, setGraphTitle] = useState(defaultGraphTitle);
   const graphSectionRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [showDropdown, setShowDropdown] = useState(false);
 
   // Dialog state
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -45,21 +29,6 @@ export default function Home() {
       graphSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [loading, characterData]);
-
-  // Handle clicking outside to close dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (inputRef.current && !inputRef.current.contains(event.target as Element)) {
-        // delay the closing of the dropdown to allow the user to select a book
-        setTimeout(() => {
-          setShowDropdown(false);
-        }, 100);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,11 +89,6 @@ export default function Home() {
     setIsDialogOpen(true);
   };
 
-  const handleBookSelect = (id: string) => {
-    setBookId(id);
-    setShowDropdown(false);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex flex-col justify-center">
       {/* Hero Section */}
@@ -140,44 +104,11 @@ export default function Home() {
             <form onSubmit={handleSubmit} className="w-full">
               <div className="relative">
                 <div className="flex">
-                  <div className="relative flex-grow">
-                    <Input
-                      ref={inputRef}
-                      id="bookId"
-                      type="text"
-                      value={bookId}
-                      onChange={(e) => setBookId(e.target.value)}
-                      onFocus={() => setShowDropdown(true)}
-                      onClick={() => setShowDropdown(true)}
-                      placeholder="Enter Gutenberg ID (e.g. 1342)"
-                      disabled={loading}
-                      className="w-full pr-3 rounded-r-none text-lg h-16"
-                      autoComplete="off"
-                    />
-                    {showDropdown && (
-                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-lg">
-                        <div className="p-2 text-sm font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                          Popular books
-                        </div>
-                        <div className="max-h-60 overflow-auto py-1">
-                          {popularBooks.map((book) => (
-                            <div
-                              key={book.id}
-                              className="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
-                              onClick={() => handleBookSelect(book.id)}
-                            >
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm font-medium">{book.title}</span>
-                                <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded text-slate-500 dark:text-slate-400">
-                                  {book.id}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <BookIdInput
+                    bookId={bookId}
+                    setBookId={setBookId}
+                    disabled={loading}
+                  />
                   <Button
                     type="submit"
                     disabled={loading}
