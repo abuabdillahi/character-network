@@ -60,8 +60,8 @@ npm install
 
 3. Create a `.env.development` file with necessary environment variables:
 ```
-UPSTASH_REDIS_REST_API_URL=your-upstash-redis-url
-UPSTASH_REDIS_REST_API_TOKEN=your-upstash-redis-token
+KV_REST_API_URL=your-upstash-redis-url
+KV_REST_API_TOKEN=your-upstash-redis-token
 GROQ_API_KEY=your-groq-api-key
 ```
 
