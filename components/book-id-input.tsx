@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
+import { Button } from './ui/button';
 
 // Popular books data with Gutenberg IDs
 const popularBooks = [
@@ -19,9 +20,10 @@ interface BookIdInputProps {
     bookId: string;
     setBookId: (id: string) => void;
     disabled?: boolean;
+    loading?: boolean;
 }
 
-export function BookIdInput({ bookId, setBookId, disabled = false }: BookIdInputProps) {
+export function BookIdInput({ bookId, setBookId, disabled = false, loading = false }: BookIdInputProps) {
     const [showDropdown, setShowDropdown] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -49,43 +51,52 @@ export function BookIdInput({ bookId, setBookId, disabled = false }: BookIdInput
     };
 
     return (
-        <div className="relative flex-grow">
-            <Input
-                ref={inputRef}
-                id="bookId"
-                type="text"
-                value={bookId}
-                onChange={(e) => setBookId(e.target.value)}
-                onFocus={() => setShowDropdown(true)}
-                onClick={() => setShowDropdown(true)}
-                placeholder="Enter Gutenberg ID (e.g. 1342)"
-                disabled={disabled}
-                className="w-full pr-3 rounded-r-none text-lg h-16"
-                autoComplete="off"
-            />
-            {showDropdown && (
-                <div id="books-dropdown" className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-lg">
-                    <div className="p-2 text-sm font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                        Popular books
-                    </div>
-                    <div className="max-h-60 overflow-auto py-1">
-                        {popularBooks.map((book) => (
-                            <div
-                                key={book.id}
-                                className="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
-                                onClick={() => handleBookSelect(book.id)}
-                            >
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium">{book.title}</span>
-                                    <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded text-slate-500 dark:text-slate-400">
-                                        {book.id}
-                                    </span>
+        <>
+            <div className="relative flex-grow">
+                <Input
+                    ref={inputRef}
+                    id="bookId"
+                    type="text"
+                    value={bookId}
+                    onChange={(e) => setBookId(e.target.value)}
+                    onFocus={() => setShowDropdown(true)}
+                    onClick={() => setShowDropdown(true)}
+                    placeholder="Enter Gutenberg ID (e.g. 1342)"
+                    disabled={disabled}
+                    className="w-full pr-3 rounded-r-none text-lg h-16"
+                    autoComplete="off"
+                />
+                {showDropdown && (
+                    <div id="books-dropdown" className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-lg">
+                        <div className="p-2 text-sm font-medium text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                            Popular books
+                        </div>
+                        <div className="max-h-60 overflow-auto py-1">
+                            {popularBooks.map((book) => (
+                                <div
+                                    key={book.id}
+                                    className="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                                    onClick={() => handleBookSelect(book.id)}
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium">{book.title}</span>
+                                        <span className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded text-slate-500 dark:text-slate-400">
+                                            {book.id}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+            <Button
+                type="submit"
+                disabled={loading}
+                className="rounded-l-none border-l-0 text-lg px-8 h-16"
+            >
+                {loading ? 'Analyzing...' : 'Analyze'}
+            </Button>
+        </>
     );
 } 

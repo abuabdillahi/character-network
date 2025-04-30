@@ -108,14 +108,8 @@ export default function Home() {
                     bookId={bookId}
                     setBookId={setBookId}
                     disabled={loading}
+                    loading={loading}
                   />
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="rounded-l-none border-l-0 text-lg px-8 h-16"
-                  >
-                    {loading ? 'Analyzing...' : 'Analyze'}
-                  </Button>
                 </div>
               </div>
             </form>
