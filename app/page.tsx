@@ -233,7 +233,7 @@ export default function Home() {
             </CardHeader>
             <CardContent className="flex justify-center items-center h-[60vh] md:h-[600px]">
               <div className="flex flex-col items-center">
-                <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <div className="w-16 h-16 border-4 border-sky-600 border-t-transparent rounded-full animate-spin mb-4"></div>
                 <p className="text-lg font-medium text-slate-700 dark:text-slate-300">
                   {progress?.step || 'Analyzing...'}
                 </p>
@@ -241,7 +241,7 @@ export default function Home() {
                   <div className="w-64 mt-4">
                     <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 mt-2">
                       <div
-                        className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                        className="bg-sky-600 h-2.5 rounded-full transition-all duration-300"
                         style={{ width: `${progress.percentage}%` }}
                       />
                     </div>
