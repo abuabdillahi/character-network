@@ -1,7 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import NetworkGraph, { Link, Node } from '@/components/network-graph';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Function to transform character interaction data into network graph format
 function transformCharacterData(data: Record<string, Record<string, { interactions: number }>>) {
@@ -50,6 +53,15 @@ export default function Home() {
   const [characterData, setCharacterData] = useState(null);
   const [graphData, setGraphData] = useState<{ nodes: Node[], links: Link[] }>({ nodes: [], links: [] });
   const [progress, setProgress] = useState<{ step: string; percentage: number } | null>(null);
+  const graphSectionRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Auto-scroll to graph section when loading or when data is loaded
+    if ((loading || characterData) && graphSectionRef.current) {
+      graphSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [loading, characterData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,82 +113,143 @@ export default function Home() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Character Network Analyzer</h1>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 py-12 md:py-16">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+            CharGraph
+          </h1>
+          <p className="text-xl text-slate-600 dark:text-slate-300 mb-8">
+            Visualise the relationships between your favourite characters.
+          </p>
+          <div className="flex flex-col items-center justify-center space-y-4 w-full max-w-2xl mx-auto">
+            <form onSubmit={handleSubmit} className="w-full">
+              <div className="relative">
+                <div className="flex">
+                  <div className="relative flex-grow">
+                    <Input
+                      ref={inputRef}
+                      id="bookId"
+                      type="text"
+                      value={bookId}
+                      onChange={(e) => setBookId(e.target.value)}
+                      placeholder="Enter Project Gutenberg book ID (e.g., 1342 for Pride and Prejudice)"
+                      disabled={loading}
+                      className="w-full pr-3 rounded-r-none text-lg py-6"
+                      autoComplete="off"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="rounded-l-none border-l-0 text-lg py-6 px-8"
+                  >
+                    {loading ? 'Analyzing...' : 'Analyze'}
+                  </Button>
+                </div>
+              </div>
+            </form>
 
-      <form onSubmit={handleSubmit} className="mb-8">
-        <div className="flex flex-col gap-2 mb-4">
-          <label htmlFor="bookId" className="font-medium">
-            Project Gutenberg Book ID:
-          </label>
-          <input
-            id="bookId"
-            type="text"
-            value={bookId}
-            onChange={(e) => setBookId(e.target.value)}
-            placeholder="Enter a book ID (e.g. 1342 for Pride and Prejudice)"
-            className="border border-gray-300 rounded px-4 py-2"
-            disabled={loading}
-          />
-        </div>
+            {error && (
+              <div className="w-full p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg">
+                <p className="font-medium">{error}</p>
+              </div>
+            )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-600 text-white font-medium py-2 px-4 rounded disabled:bg-blue-400"
-        >
-          {loading ? 'Analyzing...' : 'Analyze Book'}
-        </button>
-      </form>
-
-      {error && (
-        <div className="p-4 mb-6 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      {progress && (
-        <div className="p-4 mb-6 bg-blue-100 border border-blue-400 text-blue-700 rounded">
-          <div className="flex justify-between mb-2">
-            <span>{progress.step}</span>
-            <span>{progress.percentage}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div
-              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-              style={{ width: `${progress.percentage}%` }}
-            />
-          </div>
-        </div>
-      )}
-
-      {characterData && (
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-4">Character Network Graph</h2>
-          <div className="bg-white p-4 rounded-lg shadow h-[50vh] md:h-[500px]">
-            <NetworkGraph
-              nodes={graphData.nodes}
-              links={graphData.links}
-              height={'100%'}
-              linkStrength={0.1}
-              nodeCharge={-150}
-              showLabels={true}
-              enableZoom={true}
-              enableDrag={true}
-              onNodeClick={(node) => console.log('Clicked node:', node)}
-            />
+            {progress && (
+              <div className="w-full p-4 bg-white dark:bg-slate-800 rounded-lg shadow-md">
+                <div className="space-y-3">
+                  <div className="flex justify-between mb-1">
+                    <span className="font-medium">{progress.step}</span>
+                    <span>{progress.percentage}%</span>
+                  </div>
+                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                    <div
+                      className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                      style={{ width: `${progress.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
-      {characterData && (
-        <div className="mt-6">
-          <h2 className="text-2xl font-bold mb-4">Character Interactions</h2>
-          <pre className="bg-gray-100 p-4 rounded overflow-auto max-h-[500px] text-black">
-            {JSON.stringify(characterData, null, 2)}
-          </pre>
-        </div>
-      )}
+      {/* Results Section */}
+      <div ref={graphSectionRef} className="container mx-auto px-4 pb-16">
+        {loading && !characterData && (
+          <Card className="shadow-xl mb-8">
+            <CardHeader>
+              <CardTitle>Character Network Graph</CardTitle>
+              <CardDescription>
+                Analyzing book and generating visualization...
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center items-center h-[60vh] md:h-[600px]">
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-lg font-medium text-slate-700 dark:text-slate-300">
+                  {progress?.step || 'Analyzing...'}
+                </p>
+                {progress && (
+                  <div className="w-64 mt-4">
+                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 mt-2">
+                      <div
+                        className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                        style={{ width: `${progress.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {characterData && (
+          <>
+            <Card className="shadow-xl mb-8">
+              <CardHeader>
+                <CardTitle>Character Network Graph</CardTitle>
+                <CardDescription>
+                  Interactive visualization of character relationships
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-white dark:bg-slate-900 rounded-lg h-[60vh] md:h-[600px]">
+                  <NetworkGraph
+                    nodes={graphData.nodes}
+                    links={graphData.links}
+                    height={'100%'}
+                    linkStrength={0.1}
+                    nodeCharge={-150}
+                    showLabels={true}
+                    enableZoom={true}
+                    enableDrag={true}
+                    onNodeClick={(node) => console.log('Clicked node:', node)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Character Interactions</CardTitle>
+                <CardDescription>
+                  Detailed data of all character interactions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-md overflow-auto max-h-[400px] text-sm font-mono">
+                  <pre>{JSON.stringify(characterData, null, 2)}</pre>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </div>
     </div>
   );
 }
