@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CharGraph: Character Network Visualization
+
+CharGraph is a web application that visualizes character relationships in books. By analyzing text from Project Gutenberg, it identifies characters and their interactions, then displays them as an interactive network graph.
+
+Live site: [https://chargraph.abuabdillahi.com](https://chargraph.abuabdillahi.com)
+
+## Features
+
+- **Book Selection**: Enter a Gutenberg book ID or choose from popular titles
+- **Character Analysis**: Identifies characters and relationships from book text
+- **Interactive Visualization**: D3-powered force-directed graph of character relationships
+- **Character Details**: View detailed information about characters and their connections
+- **Responsive Design**: Works across desktop and mobile devices
+
+## How It Works
+
+1. **Book Retrieval**: The app fetches book text from Project Gutenberg using the provided ID
+2. **Text Analysis**: Using AI, the app processes the text to identify characters and their interactions
+3. **Network Creation**: Characters are represented as nodes, with edges between them based on interactions
+4. **Interactive UI**: Users can explore the graph, click on nodes to view details, and adjust the visualization
+
+## Technology Stack
+
+### Frontend
+- **Next.js**: React framework for server-rendered applications
+- **shadcn**: UI components
+- **Tailwind CSS**: Utility-first CSS framework for styling
+- **Radix UI**: Accessible UI components
+- **D3.js**: Data visualization library for the network graph
+- **TypeScript**: Type-safe JavaScript
+
+### Backend
+- **Next.js API Routes**: Serverless functions for data processing
+- **Redis (Upstash)**: Caching book data and analysis results
+- **Groq SDK**: AI-powered text analysis
+
+### Deployment
+- **Vercel**: Hosting platform with GitHub integration for CI/CD
+- **Upstash**: Redis database for caching
+- **GitHub**: Source control and automated deployments
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js (v18 or newer)
+- npm, yarn, or pnpm
 
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/abuabdillahi/character-network.git
+cd character-network
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Create a `.env.development` file with necessary environment variables:
+```
+UPSTASH_REDIS_REST_API_URL=your-upstash-redis-url
+UPSTASH_REDIS_REST_API_TOKEN=your-upstash-redis-token
+GROQ_API_KEY=your-groq-api-key
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Run the development server:
+```bash
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The application is deployed to Vercel automatically when commits are pushed to the main branch on GitHub. The Redis database is hosted on Upstash through Vercel integration.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+To deploy your own instance:
 
-## Deploy on Vercel
+1. Fork this repository
+2. Create a Vercel account and link it to your GitHub
+3. Create an Upstash Redis database through Vercel
+4. Configure the required environment variables in Vercel
+5. Deploy from your GitHub repository
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[MIT](LICENSE)
