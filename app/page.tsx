@@ -215,6 +215,8 @@ export default function Home() {
                   <NetworkGraph
                     nodes={graphData.nodes}
                     links={graphData.links}
+                    nodeColor="#1e293b"
+                    linkColor="#64748b"
                     height={'100%'}
                     linkStrength={0.1}
                     nodeCharge={-150}

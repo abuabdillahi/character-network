@@ -315,7 +315,7 @@ export default function NetworkGraph({
 
         // Highlight the node
         d3.select<SVGCircleElement, SimulationNode>(event.currentTarget as SVGCircleElement)
-          .attr("stroke", "#ff6b6b")
+          .attr("stroke", "#0284c7")
           .attr("stroke-width", 2)
 
         // Highlight connected links
@@ -325,7 +325,7 @@ export default function NetworkGraph({
             const targetId = (l.target as SimulationNode).id
 
             if (sourceId === d.id || targetId === d.id) {
-              return "#ff6b6b"
+              return "#0284c7"
             }
 
             const linkData = { ...l, source: sourceId, target: targetId } as Link
