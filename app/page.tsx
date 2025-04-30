@@ -221,7 +221,7 @@ export default function Home() {
                     linkStrength={0.1}
                     nodeCharge={-150}
                     showLabels={true}
-                    enableZoom={true}
+                    enableZoom={false}
                     enableDrag={true}
                     onNodeClick={(node) => console.log('Clicked node:', node)}
                   />
