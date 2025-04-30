@@ -57,8 +57,8 @@ export default function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Auto-scroll to graph section when loading or when data is loaded
-    if ((loading || characterData) && graphSectionRef.current) {
+    // Auto-scroll to graph section when loading
+    if (loading && graphSectionRef.current) {
       graphSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [loading, characterData]);
