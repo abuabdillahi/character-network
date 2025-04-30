@@ -134,7 +134,7 @@ export default function Home() {
                       type="text"
                       value={bookId}
                       onChange={(e) => setBookId(e.target.value)}
-                      placeholder="Enter Project Gutenberg book ID (e.g., 1342 for Pride and Prejudice)"
+                      placeholder="Enter Gutenberg ID (e.g. 1342)"
                       disabled={loading}
                       className="w-full pr-3 rounded-r-none text-lg h-16"
                       autoComplete="off"
