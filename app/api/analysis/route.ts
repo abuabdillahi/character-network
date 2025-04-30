@@ -92,7 +92,7 @@ export async function POST(req: Request) {
                     Analyze the provided book text to identify characters and their interactions.
                     An interaction is defined as a conversation between two characters.
                     Only include human characters, and exclude groups such as companies, organizations, etc.
-                    Exclide all zero interactions.
+                    Exclude all zero interactions.
                     
                     Your response must strictly conform to this JSON Schema:
                     ${JSON.stringify(jsonSchema, null, 2)}
