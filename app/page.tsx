@@ -5,6 +5,13 @@ import NetworkGraph, { Link, Node } from '@/components/network-graph';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 // Function to transform character interaction data into network graph format
 function transformCharacterData(data: Record<string, Record<string, { interactions: number }>>) {
@@ -60,6 +67,10 @@ export default function Home() {
   const [graphTitle, setGraphTitle] = useState(defaultGraphTitle);
   const graphSectionRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Dialog state
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     // Auto-scroll to graph section when loading
@@ -120,6 +131,46 @@ export default function Home() {
       // Clear progress after a short delay
       setTimeout(() => setProgress(null), 2000);
     }
+  };
+
+  // Function to handle node click
+  const handleNodeClick = (node: Node) => {
+    setSelectedNode(node);
+    setIsDialogOpen(true);
+  };
+
+  // Function to get connections for a character
+  const getCharacterConnections = (characterName: string) => {
+    if (!characterData) return [];
+
+    const connections: { character: string, interactions: number }[] = [];
+
+    // If this character has interactions as a source
+    if (characterData[characterName]) {
+      Object.entries(characterData[characterName] as Record<string, { interactions: number }>).forEach(([targetName, data]) => {
+        connections.push({
+          character: targetName,
+          interactions: data.interactions
+        });
+      });
+    }
+
+    // Check for interactions where this character is a target
+    Object.entries(characterData as Record<string, Record<string, { interactions: number }>>).forEach(([sourceName, targets]) => {
+      if (sourceName !== characterName && targets[characterName]) {
+        // Check if this connection is already added (to avoid duplicates)
+        const existingConnection = connections.find(c => c.character === sourceName);
+        if (!existingConnection) {
+          connections.push({
+            character: sourceName,
+            interactions: targets[characterName].interactions
+          });
+        }
+      }
+    });
+
+    // Sort by interaction count (descending)
+    return connections.sort((a, b) => b.interactions - a.interactions);
   };
 
   return (
@@ -223,7 +274,7 @@ export default function Home() {
                     showLabels={true}
                     enableZoom={false}
                     enableDrag={true}
-                    onNodeClick={(node) => console.log('Clicked node:', node)}
+                    onNodeClick={handleNodeClick}
                   />
                 </div>
               </CardContent>
@@ -242,6 +293,50 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Character Dialog */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold">{selectedNode?.name}</DialogTitle>
+                  <DialogDescription>
+                    Character details and interactions
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="py-4">
+                  {selectedNode && (
+                    <>
+                      <div className="mb-4">
+                        <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                          Total Interactions
+                        </div>
+                        <div className="text-2xl font-bold">{selectedNode.value}</div>
+                      </div>
+
+                      <div className="mb-2">
+                        <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">
+                          Connections
+                        </div>
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                          {getCharacterConnections(selectedNode.name || selectedNode.id).map((connection, index) => (
+                            <div
+                              key={index}
+                              className="flex justify-between items-center p-2 bg-slate-100 dark:bg-slate-800 rounded"
+                            >
+                              <span className="font-medium">{connection.character}</span>
+                              <span className="text-sm bg-sky-600 text-white px-2 py-1 rounded-full">
+                                {connection.interactions}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </>
         )}
       </div>
