@@ -136,14 +136,14 @@ export default function Home() {
                       onChange={(e) => setBookId(e.target.value)}
                       placeholder="Enter Project Gutenberg book ID (e.g., 1342 for Pride and Prejudice)"
                       disabled={loading}
-                      className="w-full pr-3 rounded-r-none text-lg py-6"
+                      className="w-full pr-3 rounded-r-none text-lg h-16"
                       autoComplete="off"
                     />
                   </div>
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="rounded-l-none border-l-0 text-lg py-6 px-8"
+                    className="rounded-l-none border-l-0 text-lg px-8 h-16"
                   >
                     {loading ? 'Analyzing...' : 'Analyze'}
                   </Button>
