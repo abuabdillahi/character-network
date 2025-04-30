@@ -113,10 +113,10 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex flex-col justify-center">
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-12 md:py-16">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+      <div className="container mx-auto px-4 pt-16">
+        <div className="text-center max-w-3xl mx-auto">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
             CharGraph
           </h1>
@@ -161,7 +161,7 @@ export default function Home() {
       </div>
 
       {/* Results Section */}
-      <div ref={graphSectionRef} className="container mx-auto px-4 pb-16">
+      <div ref={graphSectionRef} className="container mx-auto px-4 pb-16 mt-24">
         {loading && !characterData && (
           <Card className="shadow-xl mb-8">
             <CardHeader>
