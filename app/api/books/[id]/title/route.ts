@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 const CACHE_TTL = 60 * 60 * 24; // Cache for 24 hours
 
 const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_API_URL!,
-    token: process.env.UPSTASH_REDIS_REST_API_TOKEN!,
+    url: process.env.KV_REST_API_URL!,
+    token: process.env.KV_REST_API_TOKEN!,
 });
 
 export async function GET(
