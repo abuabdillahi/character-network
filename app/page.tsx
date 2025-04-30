@@ -41,15 +41,15 @@ export default function Home() {
     setLoading(true);
     setError('');
     setCharacterData(null);
-    setProgress({ step: 'Fetching book text...', percentage: 0 });
+    setProgress({ step: 'Getting book text...', percentage: 0 });
 
     try {
       // Step 1: Fetch the book text from the books API
-      setProgress({ step: 'Fetching book text...', percentage: 20 });
+      setProgress({ step: 'Getting book text...', percentage: 20 });
       const bookResponse = await fetch(`/api/books/${bookId}`);
 
       if (!bookResponse.ok) {
-        throw new Error(`Failed to fetch book: ${bookResponse.statusText}`);
+        throw new Error("Couldn't get that book, please try again");
       }
 
       const bookText = await bookResponse.text();
@@ -67,7 +67,7 @@ export default function Home() {
       });
 
       if (!analysisResponse.ok) {
-        throw new Error(`Failed to analyze text: ${analysisResponse.statusText}`);
+        throw new Error("Analysis failed, please try again");
       }
 
       setProgress({ step: 'Processing results...', percentage: 80 });
@@ -76,7 +76,7 @@ export default function Home() {
       setGraphData(transformCharacterData(data.interactions));
       setProgress({ step: 'Complete!', percentage: 100 });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setError('Something went wrong, please try again');
     } finally {
       setLoading(false);
       // Clear progress after a short delay
