@@ -62,7 +62,7 @@ export default function Home() {
       setProgress({ step: 'Analyzing text...', percentage: 40 });
 
       // Step 2: Send the book text to the analysis API
-      const analysisResponse = await fetch('/api/text', {
+      const analysisResponse = await fetch('/api/analysis', {
         method: 'POST',
         body: JSON.stringify({ bookId, bookText }),
       });
