@@ -258,7 +258,6 @@ export default function NetworkGraph({
       .attr("stroke", "#fff")
       .attr("stroke-width", 1.5)
       .style("cursor", "pointer")
-      .style("touch-action", "none") // Prevent browser handling of touch events
 
     // Add drag behavior if enabled
     if (enableDrag) {
@@ -364,14 +363,7 @@ export default function NetworkGraph({
       })
 
     if (onNodeClick) {
-      node
-        .on("click", (event: MouseEvent, d: SimulationNode) => onNodeClick(d))
-        // Add touch event handling
-        .on("touchstart", (event: TouchEvent, d: SimulationNode) => {
-          // Prevent default to stop secondary actions
-          event.preventDefault();
-          onNodeClick(d);
-        });
+      node.on("click", (event: MouseEvent, d: SimulationNode) => onNodeClick(d))
     }
 
     // Drag functions
