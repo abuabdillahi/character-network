@@ -46,7 +46,7 @@ export async function GET(
         if (!response.ok) {
             // Try alternative URL format if the first one fails
             const alternativeUrl = `https://www.gutenberg.org/cache/epub/${bookId}/pg${bookId}.txt`;
-            console.log(`First URL failed, trying alternative: ${alternativeUrl}`);
+            console.warn(`First URL failed, trying alternative: ${alternativeUrl}`);
 
             const alternativeResponse = await fetch(alternativeUrl);
 

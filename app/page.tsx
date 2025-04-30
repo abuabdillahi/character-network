@@ -200,20 +200,6 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Character Interactions</CardTitle>
-                <CardDescription>
-                  Detailed data of all character interactions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-md overflow-auto max-h-[400px] text-sm font-mono">
-                  <pre>{JSON.stringify(characterData, null, 2)}</pre>
-                </div>
-              </CardContent>
-            </Card>
-
             <CharacterDialog
               open={isDialogOpen}
               onOpenChange={setIsDialogOpen}
