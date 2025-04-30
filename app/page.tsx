@@ -98,7 +98,7 @@ export default function Home() {
             CharGraph
           </h1>
           <p className="text-xl text-slate-600 dark:text-slate-300 mb-8">
-            Visualise the relationships between your favourite characters.
+            Visualise the relationships between your favourite characters
           </p>
           <div className="flex flex-col items-center justify-center space-y-4 w-full max-w-2xl mx-auto">
             <form onSubmit={handleSubmit} className="w-full">
