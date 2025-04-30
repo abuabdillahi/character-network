@@ -156,23 +156,6 @@ export default function Home() {
                 <p className="font-medium">{error}</p>
               </div>
             )}
-
-            {progress && (
-              <div className="w-full p-4 bg-white dark:bg-slate-800 rounded-lg shadow-md">
-                <div className="space-y-3">
-                  <div className="flex justify-between mb-1">
-                    <span className="font-medium">{progress.step}</span>
-                    <span>{progress.percentage}%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
-                    <div
-                      className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                      style={{ width: `${progress.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
