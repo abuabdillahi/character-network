@@ -75,13 +75,13 @@ export default function NetworkGraph({
   // Appearance
   width = "100%",
   height = "100%",
-  nodeRadius = (node: Node): number => Math.sqrt(node.value || 10) + 5,
+  nodeRadius = (node: Node): number => Math.sqrt(node.value || 10) * 4,
   nodeColor = (node: Node): string => {
     const colors = ["#4361ee", "#3a0ca3", "#7209b7", "#f72585", "#4cc9f0"]
     return node.group !== undefined ? colors[node.group % colors.length] : "#4361ee"
   },
   linkColor = "#999",
-  linkWidth = (link: Link): number => Math.sqrt(link.value || 1) * 1.5,
+  linkWidth = (link: Link): number => Math.sqrt(link.value || 1) * 3,
 
   // Physics
   linkStrength = 0.3,
@@ -223,7 +223,7 @@ export default function NetworkGraph({
     const link = g
       .append("g")
       .attr("stroke", typeof linkColor === "function" ? null : linkColor)
-      .attr("stroke-opacity", 0.6)
+      .attr("stroke-opacity", 0.4)
       .selectAll<SVGLineElement, SimulationLink>("line")
       .data(simulationLinks)
       .join("line")
@@ -257,6 +257,7 @@ export default function NetworkGraph({
       .attr("fill", (d) => (typeof nodeColor === "function" ? nodeColor(d) : nodeColor))
       .attr("stroke", "#fff")
       .attr("stroke-width", 1.5)
+      .style("cursor", "pointer")
 
     // Add drag behavior if enabled
     if (enableDrag) {
@@ -277,11 +278,12 @@ export default function NetworkGraph({
         .data(nodes)
         .join("text")
         .text((d) => d.name || d.id)
-        .attr("font-size", 10)
-        .attr("dx", 12)
-        .attr("dy", 4)
+        .attr("font-size", 20)
+        .attr("dx", 20)
+        .attr("dy", 20)
         .style("pointer-events", "none")
-        .style("opacity", 0.7)
+        .style("stroke", "#0f172a")
+        .style("fill", "#0f172a")
 
       // Update label positions on simulation tick
       simulation.on("tick", () => {
@@ -330,17 +332,6 @@ export default function NetworkGraph({
 
             const linkData = { ...l, source: sourceId, target: targetId } as Link
             return typeof linkColor === "function" ? linkColor(linkData) : linkColor
-          })
-          .attr("stroke-width", (l) => {
-            const sourceId = (l.source as SimulationNode).id
-            const targetId = (l.target as SimulationNode).id
-
-            if (sourceId === d.id || targetId === d.id) {
-              return 3
-            }
-
-            const linkData = { ...l, source: sourceId, target: targetId } as Link
-            return typeof linkWidth === "function" ? linkWidth(linkData) : linkWidth
           })
       })
       .on("mouseout", (event: MouseEvent) => {
