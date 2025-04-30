@@ -153,12 +153,9 @@ export default function NetworkGraph({
 
     const svg = d3.select<SVGSVGElement, unknown>(svgRef.current)
 
-    // Create a deep copy of nodes to avoid mutating props
-    const simulationNodes: SimulationNode[] = nodes.map((node) => ({ ...node }))
-
     // Create a map of node IDs to node objects
     const nodeMap = new Map<string, SimulationNode>()
-    simulationNodes.forEach((node) => {
+    nodes.forEach((node) => {
       nodeMap.set(node.id, node)
     })
 
@@ -191,7 +188,7 @@ export default function NetworkGraph({
     // Create a simulation with several forces
     const simulation = d3
       .forceSimulation<SimulationNode>()
-      .nodes(simulationNodes)
+      .nodes(nodes)
       .force(
         "link",
         d3
@@ -254,7 +251,7 @@ export default function NetworkGraph({
     const node = g
       .append("g")
       .selectAll<SVGCircleElement, SimulationNode>("circle")
-      .data(simulationNodes)
+      .data(nodes)
       .join("circle")
       .attr("r", (d) => (typeof nodeRadius === "function" ? nodeRadius(d) : nodeRadius))
       .attr("fill", (d) => (typeof nodeColor === "function" ? nodeColor(d) : nodeColor))
@@ -277,7 +274,7 @@ export default function NetworkGraph({
       const labels = g
         .append("g")
         .selectAll<SVGTextElement, SimulationNode>("text")
-        .data(simulationNodes)
+        .data(nodes)
         .join("text")
         .text((d) => d.name || d.id)
         .attr("font-size", 10)

@@ -35,11 +35,14 @@ function transformCharacterData(data: Record<string, Record<string, { interactio
   // Create links between characters
   Object.entries(data).forEach(([source, interactions]) => {
     Object.entries(interactions).forEach(([target, { interactions: value }]) => {
-      links.push({
-        source,
-        target,
-        value
-      });
+      // Only create links between nodes that exist
+      if (nodeMap.has(source) && nodeMap.has(target)) {
+        links.push({
+          source,
+          target,
+          value
+        });
+      }
     });
   });
 
