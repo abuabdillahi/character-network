@@ -27,6 +27,13 @@ export function BookIdInput({ bookId, setBookId, disabled = false, loading = fal
     const [showDropdown, setShowDropdown] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    // Hide dropdown when loading starts (form submission)
+    useEffect(() => {
+        if (loading) {
+            setShowDropdown(false);
+        }
+    }, [loading]);
+
     // Handle clicking outside to close dropdown
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
