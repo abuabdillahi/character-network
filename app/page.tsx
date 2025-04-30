@@ -194,6 +194,9 @@ export default function Home() {
                     onNodeClick={handleNodeClick}
                   />
                 </div>
+                <CardDescription>
+                  Note: This analysis is based on the first 50,000 characters of the book
+                </CardDescription>
               </CardContent>
             </Card>
 
