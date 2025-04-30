@@ -52,8 +52,10 @@ export async function POST(req: Request) {
       apiKey: process.env.GROQ_API_KEY,
     });
 
-    // Truncate text to 50000 characters
-    const truncatedText = bookText.slice(0, 50000);
+    // Calculate the start position as 10% of the total text length
+    const startPosition = Math.floor(bookText.length * 0.1);
+    // Truncate text to 50000 characters starting from 10% into the book
+    const truncatedText = bookText.slice(startPosition, startPosition + 50000);
 
     // Define the JSON Schema for the response
     const jsonSchema = {
