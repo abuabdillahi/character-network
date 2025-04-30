@@ -56,6 +56,8 @@ export default function Home() {
   const [characterData, setCharacterData] = useState(null);
   const [graphData, setGraphData] = useState<{ nodes: Node[], links: Link[] }>({ nodes: [], links: [] });
   const [progress, setProgress] = useState<{ step: string; percentage: number } | null>(null);
+  const defaultGraphTitle = 'Character Network';
+  const [graphTitle, setGraphTitle] = useState(defaultGraphTitle);
   const graphSectionRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -89,6 +91,11 @@ export default function Home() {
       }
 
       const bookText = await bookResponse.text();
+
+      const bookMetadataResponse = await fetch(`/api/books/${bookId}/title`);
+      const bookMetadata = await bookMetadataResponse.json();
+      setGraphTitle(`${bookMetadata.title} ${defaultGraphTitle}`);
+
       setProgress({ step: 'Analyzing text...', percentage: 40 });
 
       // Step 2: Send the book text to the analysis API
@@ -168,7 +175,7 @@ export default function Home() {
         {loading && !characterData && (
           <Card className="shadow-xl mb-8">
             <CardHeader>
-              <CardTitle>Character Network Graph</CardTitle>
+              <CardTitle>{graphTitle}</CardTitle>
               <CardDescription>
                 Analyzing book and generating visualization...
               </CardDescription>
@@ -198,7 +205,7 @@ export default function Home() {
           <>
             <Card className="shadow-xl mb-8">
               <CardHeader>
-                <CardTitle>Character Network Graph</CardTitle>
+                <CardTitle>{graphTitle}</CardTitle>
                 <CardDescription>
                   Interactive visualization of character relationships
                 </CardDescription>
