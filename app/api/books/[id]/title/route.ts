@@ -1,5 +1,6 @@
 import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
+import urlMetadata from 'url-metadata';
 
 const CACHE_TTL = 60 * 60 * 24; // Cache for 24 hours
 
@@ -31,14 +32,13 @@ export async function GET(
             );
         }
 
-        const metadataUrl = `http://gutendex.com/books/${bookId}`;
+        const metadataUrl = `https://www.gutenberg.org/ebooks/${bookId}`;
 
         console.log(`Fetching book metadata from: ${metadataUrl}`);
 
-        const metadataResponse = await fetch(metadataUrl);
-        const metadata = await metadataResponse.json();
+        const metadata = await urlMetadata(metadataUrl);
 
-        const title = metadata.title;
+        const title = metadata['og:title'] || metadata.title.split('|')[0].trim();
 
         if (!title) {
             return NextResponse.json(
