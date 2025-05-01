@@ -40,6 +40,13 @@ export async function GET(
 
         const title = metadata.title;
 
+        if (!title) {
+            return NextResponse.json(
+                { error: "Book title not found" },
+                { status: 404 }
+            );
+        }
+
         await redis.set(cacheKey, title, { ex: CACHE_TTL });
 
         return NextResponse.json(

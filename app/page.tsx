@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import NetworkGraph, { Link, Node } from '@/components/network-graph';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CharacterDialog } from '@/components/character-dialog';
 import { BookIdInput } from '@/components/book-id-input';
@@ -55,8 +54,8 @@ export default function Home() {
       const bookText = await bookResponse.text();
 
       const bookMetadataResponse = await fetch(`/api/books/${bookId}/title`);
-      const bookMetadata = await bookMetadataResponse.json();
-      setGraphTitle(`${bookMetadata.title} ${defaultGraphTitle}`);
+      const bookMetadata = await bookMetadataResponse.json()
+      bookMetadata.title ? setGraphTitle(`${bookMetadata.title} ${defaultGraphTitle}`) : setGraphTitle(defaultGraphTitle);
 
       setProgress({ step: 'Analyzing text...', percentage: 40 });
 
