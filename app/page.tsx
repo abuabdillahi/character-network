@@ -55,7 +55,7 @@ export default function Home() {
 
       const bookMetadataResponse = await fetch(`/api/books/${bookId}/title`);
       const bookMetadata = await bookMetadataResponse.json()
-      bookMetadata.title ? setGraphTitle(`${bookMetadata.title} ${defaultGraphTitle}`) : setGraphTitle(defaultGraphTitle);
+      bookMetadata.title ? setGraphTitle(bookMetadata.title) : setGraphTitle(defaultGraphTitle);
 
       setProgress({ step: 'Analyzing text...', percentage: 40 });
 
